@@ -1,6 +1,7 @@
 package com.capgemini.wsb.fitnesstracker.user.internal;
 
 import com.capgemini.wsb.fitnesstracker.user.api.User;
+import com.capgemini.wsb.fitnesstracker.user.api.UserDto;
 import com.capgemini.wsb.fitnesstracker.user.api.UserProvider;
 import com.capgemini.wsb.fitnesstracker.user.api.UserService;
 import lombok.RequiredArgsConstructor;
@@ -8,7 +9,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.Period;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,29 +18,46 @@ import java.util.Optional;
 class UserServiceImpl implements UserService, UserProvider {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-    @Override
-    public User createUser(final User user) {
-        log.info("Creating User {}", user);
-        if (user.getId() != null) {
+    public UserDto createUser(UserDto newUserDto) {
+        log.info("Creating User {}", newUserDto);
+
+        if (newUserDto.id() != null) {
             throw new IllegalArgumentException("User has already DB ID, update is not permitted!");
         }
-        return userRepository.save(user);
+        User createdUser = userRepository.save(userMapper.toEntity(newUserDto));
+
+        return userMapper.toDto(createdUser);
     }
 
     @Override
-    public Optional<User> getUser(final Long userId) {
-        return userRepository.findById(userId);
+    public Optional<UserDto> getUser(final Long userId) {
+        log.info("getUser()");
+        Optional<User> user = userRepository.findById(userId);
+        if (user.isPresent())
+        {
+            log.info("user present");
+        }
+        else
+        {
+            log.info("user NULL");
+        }
+        return user.map(userMapper::toDto).or(Optional::empty);
     }
 
     @Override
-    public Optional<User> getUserByEmail(final String email) {
-        return userRepository.findByEmail(email);
+    public Optional<UserDto> getUserByEmail(final String email) {
+        Optional<User> user = userRepository.findByEmail(email);
+        return user.map(userMapper::toDto).or(Optional::empty);
     }
 
     @Override
-    public List<User> findAllUsers() {
-        return userRepository.findAll();
+    public List<UserDto> findAllUsers() {
+        return userRepository.findAll()
+                .stream()
+                .map(userMapper::toDto)
+                .toList();
     }
 
     @Override
@@ -53,19 +70,22 @@ class UserServiceImpl implements UserService, UserProvider {
     }
 
     @Override
-    public Optional<User> updateUser(Long id, User newUser) {
+    public Optional<UserDto> updateUser(Long id, UserDto newUserDto) {
         return userRepository.findById(id).map(user -> {
-            user.setFirstName(newUser.getFirstName());
-            user.setLastName(newUser.getLastName());
-            user.setBirthdate(newUser.getBirthdate());
-            user.setEmail(newUser.getEmail());
-            return userRepository.save(user);
+            user.setFirstName(newUserDto.firstName());
+            user.setLastName(newUserDto.lastName());
+            user.setBirthdate(newUserDto.birthdate());
+            user.setEmail(newUserDto.email());
+            return userMapper.toDto(userRepository.save(user));
         });
     }
 
     @Override
-    public List<User> findUsersOlderThan(LocalDate time) {
-        return userRepository.findAll().stream()
-                .filter(user -> time.isAfter(user.getBirthdate())).toList();
+    public List<UserDto> findUsersOlderThan(LocalDate time) {
+        return userRepository.findAll()
+                .stream()
+                .filter(user -> time.isAfter(user.getBirthdate()))
+                .map(userMapper::toDto)
+                .toList();
     }
 }

@@ -9,6 +9,12 @@ import lombok.ToString;
 
 import java.time.LocalDate;
 
+/**
+ * Entity representing a user in the system. It contains personal information such as name, birthdate, and email.
+ * This class maps to the 'users' table in the database with each instance representing a single record.
+ *
+ * @see jakarta.persistence.Entity
+ */
 @Entity
 @Table(name = "users")
 @Getter
@@ -45,22 +51,38 @@ public class User {
         this.email = email;
     }
 
+    /**
+     * Sets the first name of the user.
+     *
+     * @param firstName the first name to set
+     */
     public void setFirstName(String firstName) {
         this.firstName = firstName;
     }
 
+    /**
+     * Sets the last name of the user.
+     *
+     * @param lastName the last name to set
+     */
     public void setLastName(String lastName) {
         this.lastName = lastName;
     }
 
+    /**
+     * Sets the email address of the user. The email must be unique across all users.
+     *
+     * @param email the email address to set
+     */
     public void setEmail(String email) {
         this.email = email;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
+    /**
+     * Sets the birthdate of the user.
+     *
+     * @param birthdate the date of birth to set
+     */
     public void setBirthdate(LocalDate birthdate) {
         this.birthdate = birthdate;
     }
